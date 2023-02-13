@@ -131,6 +131,8 @@ contract Voting is Ownable {
         } else {
             winningProposalID = w;
         }
+        setCurrentStatus(WorkflowStatus.VotesTallied);
+        emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
     }
 
     function mostVotes(Proposal memory _candidate, Proposal memory _proposal) public returns (Proposal memory) {
