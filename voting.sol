@@ -66,7 +66,9 @@ contract Voting is Ownable {
     }
 
     function startProposalReg() public onlyOwner {
+        setPreviousStatus(WorkflowStatus.RegisteringVoters);
         setCurrentStatus(WorkflowStatus.ProposalsRegistrationStarted);
+        setNextStatus(WorkflowStatus.ProposalsRegistrationEnded);
         registration = true;
         emit WorkflowStatusChange(
             WorkflowStatus.RegisteringVoters, 
@@ -83,7 +85,9 @@ contract Voting is Ownable {
     }
 
     function endProposalReg() public onlyOwner {
+        setPreviousStatus(WorkflowStatus.ProposalsRegistrationStarted);
         setCurrentStatus(WorkflowStatus.ProposalsRegistrationEnded);
+        setNextStatus(WorkflowStatus.VotingSessionStarted);
         registration = false;
         emit WorkflowStatusChange(
             WorkflowStatus.ProposalsRegistrationStarted,
@@ -92,7 +96,9 @@ contract Voting is Ownable {
     }
 
     function startBallot() public onlyOwner {
+        setPreviousStatus(WorkflowStatus.ProposalsRegistrationEnded);
         setCurrentStatus(WorkflowStatus.VotingSessionStarted);
+        setNextStatus(WorkflowStatus.VotingSessionEnded);
         ballot = true;
         emit WorkflowStatusChange(
             WorkflowStatus.ProposalsRegistrationEnded,
@@ -108,7 +114,9 @@ contract Voting is Ownable {
     }
 
     function endBallot() public onlyOwner {
+        setPreviousStatus(WorkflowStatus.VotingSessionStarted);
         setCurrentStatus(WorkflowStatus.VotingSessionEnded);
+        setNextStatus(WorkflowStatus.VotesTallied);
         ballot = false;
         emit WorkflowStatusChange(
             WorkflowStatus.VotingSessionStarted,
@@ -129,8 +137,12 @@ contract Voting is Ownable {
         } else {
             winningProposalID = w;
         }
+        setPreviousStatus(WorkflowStatus.VotingSessionEnded);
         setCurrentStatus(WorkflowStatus.VotesTallied);
-        emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
+        emit WorkflowStatusChange(
+            WorkflowStatus.VotingSessionEnded, 
+            WorkflowStatus.VotesTallied
+        );
     }
 
     function mostVotes(Proposal memory _candidate, Proposal memory _proposal) public onlyOwner returns (Proposal memory) {
