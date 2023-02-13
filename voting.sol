@@ -5,11 +5,6 @@ pragma solidity 0.8.18;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Voting is Ownable {
-    address internal admin;
-
-    constructor() {
-        admin = msg.sender;
-    }
 
     event VoterRegistered(address voterAddress); 
     event WorkflowStatusChange(WorkflowStatus previousStatus, WorkflowStatus newStatus);
@@ -37,6 +32,7 @@ contract Voting is Ownable {
     }
 
     mapping (address => Voter) voters;
+    mapping (uint => Proposal) idTrackers;
     mapping (uint => uint) votedProposals;
 
     Proposal[] public proposals;
@@ -78,10 +74,12 @@ contract Voting is Ownable {
         );
     }
 
-    function registerProposal(uint proposalId, string calldata txt) external isRegistered checkStatus {
+    function registerProposal(string calldata txt) external isRegistered checkStatus {
+        uint _proposalId = proposals.length;
         Proposal memory _proposal = Proposal(txt, 0);
+        idTrackers[_proposalId] = _proposal;
         proposals.push(_proposal);
-        emit ProposalRegistered(proposalId);        
+        emit ProposalRegistered(_proposalId);        
     }
 
     function endProposalReg() public onlyOwner {
@@ -135,7 +133,7 @@ contract Voting is Ownable {
         emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
     }
 
-    function mostVotes(Proposal memory _candidate, Proposal memory _proposal) public returns (Proposal memory) {
+    function mostVotes(Proposal memory _candidate, Proposal memory _proposal) public onlyOwner returns (Proposal memory) {
         Proposal memory output;
         if (_candidate.voteCount > _proposal.voteCount) {
             output = Proposal(_candidate.description, _candidate.voteCount);
@@ -197,7 +195,6 @@ contract Voting is Ownable {
         return _temp;
     }
 
-
     function setCurrentStatus(WorkflowStatus _status) internal {
         currentStatus = _status;
     }
@@ -212,18 +209,6 @@ contract Voting is Ownable {
 
     function getWinner() public view returns (Proposal memory) {
         if (winners.length != 0) return candidate;
-        return proposals[w];
-    }
-
-    function getCurrentStatus() external view returns (WorkflowStatus) {
-        return currentStatus;
-    }
-
-    function getNextStatus() external view returns (WorkflowStatus) {
-        return nextStatus;
-    }
-
-    function getPreviousStatus() external view returns (WorkflowStatus){
-        return previousStatus;
+        return idTrackers[winningProposalID];
     }
 }
